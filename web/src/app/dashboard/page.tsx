@@ -1,6 +1,6 @@
-// web/src/app/dashboard/page.tsx
 import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
+import UploadCard from "./UploadCard"
 
 export default async function Dashboard() {
   const session = await auth()
@@ -48,33 +48,8 @@ export default async function Dashboard() {
         </div>
       </header>
 
-      {/* This is what makes the card sit lower */}
-      <section className="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl items-start justify-center px-8 pt-20">
-        <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-8 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-          <div className="text-2xl font-semibold tracking-tight">
-            Upload your resume (PDF)
-          </div>
-
-          <form className="mt-6">
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-black/20 px-6 py-14 text-center hover:bg-black/30">
-              <div className="text-sm text-white/80">Click to choose a PDF</div>
-              <div className="text-xs text-white/50">.pdf</div>
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                name="resume"
-              />
-            </label>
-
-            <button
-              type="button"
-              className="mt-5 w-full rounded-xl bg-white/10 px-4 py-4 text-sm font-medium text-white hover:bg-white/15"
-            >
-              Continue
-            </button>
-          </form>
-        </div>
+      <section className="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl items-start justify-center px-8 pt-32">
+        <UploadCard />
       </section>
     </main>
   )
