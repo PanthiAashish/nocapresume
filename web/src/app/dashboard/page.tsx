@@ -1,10 +1,19 @@
 import { auth, signOut } from "@/auth"
+import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import UploadCard from "./UploadCard"
 
 export default async function Dashboard() {
   const session = await auth()
   if (!session?.user) redirect("/")
+
+  const uploads = session.user.email
+    ? await prisma.resumeUpload.findMany({
+        where: { userEmail: session.user.email },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, filename: true, createdAt: true },
+      })
+    : null
 
   return (
     <main className="min-h-screen bg-[#070B14] text-white">
@@ -48,7 +57,36 @@ export default async function Dashboard() {
         </div>
       </header>
 
-      <section className="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl items-start justify-center px-8 pt-32">
+      <section className="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl flex-col items-center px-8 pt-24">
+        <div className="mb-6 w-full max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+          <div className="text-sm font-medium tracking-tight text-white/90">
+            Uploaded resumes
+          </div>
+          {uploads?.length ? (
+            <div className="mt-3 max-h-44 space-y-3 overflow-y-auto pr-2">
+              {uploads.map((upload) => (
+                <div
+                  key={upload.id}
+                  className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                >
+                  <div className="text-sm text-white">{upload.filename}</div>
+                  <div className="mt-1 text-xs text-white/60">
+                    Uploaded{" "}
+                    {new Intl.DateTimeFormat("en-US", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(upload.createdAt)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 text-sm text-white/60">
+              No resume uploaded yet.
+            </div>
+          )}
+        </div>
+
         <UploadCard />
       </section>
     </main>
