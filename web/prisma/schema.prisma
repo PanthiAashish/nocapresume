@@ -17,3 +17,12 @@ model ResumeUpload {
 
   @@index([userEmail, createdAt])
 }
+
+model JobDescriptionEntry {
+  id        String   @id @default(cuid())
+  userEmail String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([userEmail, createdAt])
+}

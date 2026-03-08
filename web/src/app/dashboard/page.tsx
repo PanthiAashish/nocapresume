@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
+import JobDescriptionCard from "./JobDescriptionCard"
 import UploadCard from "./UploadCard"
 
 export default async function Dashboard() {
@@ -12,6 +13,13 @@ export default async function Dashboard() {
         where: { userEmail: session.user.email },
         orderBy: { createdAt: "desc" },
         select: { id: true, filename: true, createdAt: true },
+      })
+    : null
+  const latestJobDescription = session.user.email
+    ? await prisma.jobDescriptionEntry.findFirst({
+        where: { userEmail: session.user.email },
+        orderBy: { createdAt: "desc" },
+        select: { content: true, createdAt: true },
       })
     : null
 
@@ -57,37 +65,52 @@ export default async function Dashboard() {
         </div>
       </header>
 
-      <section className="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl flex-col items-center px-8 pt-24">
-        <div className="mb-6 w-full max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-          <div className="text-sm font-medium tracking-tight text-white/90">
-            Uploaded resumes
-          </div>
-          {uploads?.length ? (
-            <div className="mt-3 max-h-44 space-y-3 overflow-y-auto pr-2">
-              {uploads.map((upload) => (
-                <div
-                  key={upload.id}
-                  className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
-                >
-                  <div className="text-sm text-white">{upload.filename}</div>
-                  <div className="mt-1 text-xs text-white/60">
-                    Uploaded{" "}
-                    {new Intl.DateTimeFormat("en-US", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(upload.createdAt)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="mt-3 text-sm text-white/60">
-              No resume uploaded yet.
-            </div>
-          )}
-        </div>
+      <section className="mx-auto min-h-[calc(100vh-84px)] w-full max-w-6xl px-8 pt-24">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)] lg:items-center">
+          <div className="flex flex-col items-center">
+            <JobDescriptionCard
+              latestJobDescription={
+                latestJobDescription
+                  ? {
+                      content: latestJobDescription.content,
+                      createdAt: latestJobDescription.createdAt.toISOString(),
+                    }
+                  : null
+              }
+            />
 
-        <UploadCard />
+            <UploadCard />
+          </div>
+
+          <div className="w-full self-center rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+            <div className="text-sm font-medium tracking-tight text-white/90">
+              Uploaded resumes
+            </div>
+            {uploads?.length ? (
+              <div className="mt-3 max-h-60 space-y-3 overflow-y-auto pr-2">
+                {uploads.map((upload) => (
+                  <div
+                    key={upload.id}
+                    className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
+                  >
+                    <div className="text-sm text-white">{upload.filename}</div>
+                    <div className="mt-1 text-xs text-white/60">
+                      Uploaded{" "}
+                      {new Intl.DateTimeFormat("en-US", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(upload.createdAt)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3 text-sm text-white/60">
+                No resume uploaded yet.
+              </div>
+            )}
+          </div>
+        </div>
       </section>
     </main>
   )
