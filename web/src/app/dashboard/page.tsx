@@ -22,6 +22,15 @@ export default async function Dashboard() {
         select: { content: true, createdAt: true },
       })
     : null
+  const latestResume = uploads?.[0] ?? null
+  const readinessMessage =
+    latestResume && latestJobDescription
+      ? "Ready for analysis"
+      : latestResume
+        ? "Missing job description"
+        : latestJobDescription
+          ? "Missing resume"
+          : "Missing resume and job description"
 
   return (
     <main className="min-h-screen bg-[#070B14] text-white">
@@ -66,8 +75,8 @@ export default async function Dashboard() {
       </header>
 
       <section className="mx-auto min-h-[calc(100vh-84px)] w-full max-w-6xl px-8 pt-24">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)] lg:items-center">
-          <div className="flex flex-col items-center">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <div className="flex">
             <JobDescriptionCard
               latestJobDescription={
                 latestJobDescription
@@ -78,37 +87,64 @@ export default async function Dashboard() {
                   : null
               }
             />
-
+          </div>
+          <div className="flex">
             <UploadCard />
           </div>
+        </div>
 
-          <div className="w-full self-center rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-            <div className="text-sm font-medium tracking-tight text-white/90">
-              Uploaded resumes
-            </div>
-            {uploads?.length ? (
-              <div className="mt-3 max-h-60 space-y-3 overflow-y-auto pr-2">
-                {uploads.map((upload) => (
-                  <div
-                    key={upload.id}
-                    className="rounded-xl border border-white/10 bg-black/20 px-4 py-3"
-                  >
-                    <div className="text-sm text-white">{upload.filename}</div>
-                    <div className="mt-1 text-xs text-white/60">
-                      Uploaded{" "}
-                      {new Intl.DateTimeFormat("en-US", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      }).format(upload.createdAt)}
-                    </div>
+        <div className="mt-6 w-full rounded-2xl border border-white/10 bg-white/5 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+          <div className="text-sm font-medium tracking-tight text-white/90">
+            Analysis workspace
+          </div>
+          <div className="mt-2 text-sm text-white/70">{readinessMessage}</div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-4">
+              <div className="text-xs font-medium uppercase tracking-[0.18em] text-white/50">
+                Latest resume
+              </div>
+              {latestResume ? (
+                <>
+                  <div className="mt-3 text-sm text-white">{latestResume.filename}</div>
+                  <div className="mt-1 text-xs text-white/60">
+                    Uploaded{" "}
+                    {new Intl.DateTimeFormat("en-US", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(latestResume.createdAt)}
                   </div>
-                ))}
+                </>
+              ) : (
+                <div className="mt-3 text-sm text-white/60">
+                  No resume uploaded yet.
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-4">
+              <div className="text-xs font-medium uppercase tracking-[0.18em] text-white/50">
+                Latest job description
               </div>
-            ) : (
-              <div className="mt-3 text-sm text-white/60">
-                No resume uploaded yet.
-              </div>
-            )}
+              {latestJobDescription ? (
+                <>
+                  <div className="mt-3 text-xs text-white/60">
+                    Saved{" "}
+                    {new Intl.DateTimeFormat("en-US", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(latestJobDescription.createdAt)}
+                  </div>
+                  <div className="mt-3 max-h-40 overflow-y-auto whitespace-pre-wrap text-sm text-white/85">
+                    {latestJobDescription.content}
+                  </div>
+                </>
+              ) : (
+                <div className="mt-3 text-sm text-white/60">
+                  No job description saved yet.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>

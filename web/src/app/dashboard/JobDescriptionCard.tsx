@@ -84,30 +84,6 @@ export default function JobDescriptionCard({
           {msg}
         </div>
       ) : null}
-
-      <div className="mt-6 rounded-xl border border-white/10 bg-black/20 px-4 py-4">
-        <div className="text-xs font-medium uppercase tracking-[0.18em] text-white/50">
-          Latest saved
-        </div>
-        {latestJobDescription ? (
-          <>
-            <div className="mt-3 text-xs text-white/60">
-              Saved{" "}
-              {new Intl.DateTimeFormat("en-US", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(latestJobDescription.createdAt))}
-            </div>
-            <div className="mt-3 whitespace-pre-wrap text-sm text-white/85">
-              {latestJobDescription.content}
-            </div>
-          </>
-        ) : (
-          <div className="mt-3 text-sm text-white/60">
-            No job description saved yet.
-          </div>
-        )}
-      </div>
     </div>
   )
 }

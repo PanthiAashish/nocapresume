@@ -8,12 +8,14 @@ datasource db {
 }
 
 model ResumeUpload {
-  id        String   @id @default(cuid())
-  userEmail String
-  filename  String
-  mimeType  String
-  bytes     Bytes
-  createdAt DateTime @default(now())
+  id                  String   @id @default(cuid())
+  userEmail           String
+  filename            String
+  mimeType            String
+  bytes               Bytes
+  extractedText       String?
+  textExtractionError String?
+  createdAt           DateTime @default(now())
 
   @@index([userEmail, createdAt])
 }
