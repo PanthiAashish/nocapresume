@@ -1,12 +1,6 @@
-import { PDFParse } from "pdf-parse"
+import pdfParse from "pdf-parse-debugging-disabled"
 
 export async function extractPdfText(bytes: Buffer) {
-  const parser = new PDFParse({ data: bytes })
-
-  try {
-    const result = await parser.getText()
-    return result.text.trim()
-  } finally {
-    await parser.destroy()
-  }
+  const result = await pdfParse(bytes)
+  return result.text.trim()
 }

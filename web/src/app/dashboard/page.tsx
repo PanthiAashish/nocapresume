@@ -12,7 +12,13 @@ export default async function Dashboard() {
     ? await prisma.resumeUpload.findMany({
         where: { userEmail: session.user.email },
         orderBy: { createdAt: "desc" },
-        select: { id: true, filename: true, createdAt: true },
+        select: {
+          id: true,
+          filename: true,
+          createdAt: true,
+          extractedText: true,
+          textExtractionError: true,
+        },
       })
     : null
   const latestJobDescription = session.user.email
@@ -23,6 +29,9 @@ export default async function Dashboard() {
       })
     : null
   const latestResume = uploads?.[0] ?? null
+  const latestResumePreview = latestResume?.extractedText
+    ? latestResume.extractedText.slice(0, 600).trim()
+    : null
   const readinessMessage =
     latestResume && latestJobDescription
       ? "Ready for analysis"
@@ -113,6 +122,28 @@ export default async function Dashboard() {
                       dateStyle: "medium",
                       timeStyle: "short",
                     }).format(latestResume.createdAt)}
+                  </div>
+                  <div className="mt-4 border-t border-white/10 pt-4">
+                    <div className="text-xs font-medium uppercase tracking-[0.18em] text-white/50">
+                      Extracted text preview
+                    </div>
+                    {latestResumePreview ? (
+                      <div className="mt-3 max-h-40 overflow-y-auto whitespace-pre-wrap text-sm text-white/85">
+                        {latestResumePreview}
+                        {latestResume.extractedText &&
+                        latestResume.extractedText.length > latestResumePreview.length
+                          ? "..."
+                          : ""}
+                      </div>
+                    ) : latestResume.textExtractionError ? (
+                      <div className="mt-3 text-sm text-white/60">
+                        Resume text extraction failed for this upload.
+                      </div>
+                    ) : (
+                      <div className="mt-3 text-sm text-white/60">
+                        No extracted text available yet.
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
