@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import Link from "next/link"
 import { redirect } from "next/navigation"
 
 export default async function SuccessPage() {
@@ -20,12 +21,12 @@ export default async function SuccessPage() {
           You can continue to the next step.
         </p>
 
-        <a
-          href="/dashboard"
+        <Link
+          href="/"
           className="mt-8 rounded-xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/15"
         >
           Back to dashboard
-        </a>
+        </Link>
       </div>
     </main>
   )

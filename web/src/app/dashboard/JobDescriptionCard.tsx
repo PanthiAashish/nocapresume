@@ -14,11 +14,16 @@ export default function JobDescriptionCard({
   latestJobDescription,
 }: JobDescriptionCardProps) {
   const router = useRouter()
-  const [content, setContent] = useState("")
+  const [content, setContent] = useState(latestJobDescription?.content ?? "")
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">("idle")
   const [msg, setMsg] = useState("")
+  const [generationSummary, setGenerationSummary] = useState<{
+    experienceCount: number
+    projectCount: number
+    leadershipCount: number
+  } | null>(null)
 
-  async function onSave() {
+  async function onGenerate() {
     if (!content.trim()) {
       setStatus("error")
       setMsg("Paste a job description first")
@@ -29,26 +34,45 @@ export default function JobDescriptionCard({
     setMsg("")
 
     try {
-      const res = await fetch("/api/job-description", {
+      const res = await fetch("/api/resume/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       })
 
-      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
         setStatus("error")
-        setMsg(data?.error || "Save failed")
+        setMsg(
+          data?.error === "missing_profile"
+            ? "Complete your saved profile first"
+            : data?.error || "Generation failed"
+        )
         return
       }
 
+      const pdfBlob = await res.blob()
+      const objectUrl = URL.createObjectURL(pdfBlob)
+      const link = document.createElement("a")
+      link.href = objectUrl
+      link.download = "generated_resume.pdf"
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.open(objectUrl, "_blank", "noopener,noreferrer")
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
+
+      setGenerationSummary({
+        experienceCount: Number(res.headers.get("X-Selected-Experience-Count") ?? "0"),
+        projectCount: Number(res.headers.get("X-Selected-Project-Count") ?? "0"),
+        leadershipCount: Number(res.headers.get("X-Selected-Leadership-Count") ?? "0"),
+      })
       setStatus("done")
-      setMsg("Job description saved")
-      setContent("")
+      setMsg("PDF resume generated from your saved profile")
       router.refresh()
     } catch {
       setStatus("error")
-      setMsg("Save failed")
+      setMsg("Generation failed")
     }
   }
 
@@ -68,11 +92,15 @@ export default function JobDescriptionCard({
 
       <button
         type="button"
-        onClick={onSave}
+        onClick={onGenerate}
         disabled={status === "saving" || !content.trim()}
-        className="mt-4 w-full rounded-xl bg-white/10 px-4 py-4 text-sm font-medium text-white hover:bg-white/15 disabled:opacity-50"
+        className={`mt-4 w-full rounded-xl px-4 py-4 text-sm font-medium text-white transition-colors disabled:opacity-50 ${
+          content.trim()
+            ? "bg-blue-600 hover:bg-blue-500"
+            : "bg-white/10 hover:bg-white/15"
+        }`}
       >
-        {status === "saving" ? "Saving..." : "Save job description"}
+        {status === "saving" ? "Generating..." : "Generate Resume"}
       </button>
 
       {msg ? (
@@ -82,6 +110,14 @@ export default function JobDescriptionCard({
           }`}
         >
           {msg}
+        </div>
+      ) : null}
+
+      {generationSummary ? (
+        <div className="mt-5 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/75">
+          Selected {generationSummary.experienceCount} experience entries,{" "}
+          {generationSummary.projectCount} projects, and{" "}
+          {generationSummary.leadershipCount} leadership entries.
         </div>
       ) : null}
     </div>
