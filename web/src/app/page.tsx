@@ -6,8 +6,11 @@ export default async function Home() {
   const session = await auth()
 
   if (session?.user) {
-    const latestJobDescription = session.user.email
-      ? await prisma.jobDescriptionEntry.findFirst({
+    let latestJobDescription = null
+
+    if (session.user.email) {
+      try {
+        latestJobDescription = await prisma.jobDescriptionEntry.findFirst({
           where: { userEmail: session.user.email },
           orderBy: { createdAt: "desc" },
           select: {
@@ -15,7 +18,10 @@ export default async function Home() {
             createdAt: true,
           },
         })
-      : null
+      } catch (error) {
+        console.error("Failed to load latest job description", error)
+      }
+    }
 
     return (
       <DashboardPageContent
