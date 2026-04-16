@@ -21,6 +21,7 @@ export default function JobDescriptionCard({
     experienceCount: number
     projectCount: number
     leadershipCount: number
+    reportId: string
   } | null>(null)
 
   async function onGenerate() {
@@ -51,24 +52,17 @@ export default function JobDescriptionCard({
         return
       }
 
-      const pdfBlob = await res.blob()
-      const objectUrl = URL.createObjectURL(pdfBlob)
-      const link = document.createElement("a")
-      link.href = objectUrl
-      link.download = "generated_resume.pdf"
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.open(objectUrl, "_blank", "noopener,noreferrer")
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
+      const data = await res.json()
 
       setGenerationSummary({
-        experienceCount: Number(res.headers.get("X-Selected-Experience-Count") ?? "0"),
-        projectCount: Number(res.headers.get("X-Selected-Project-Count") ?? "0"),
-        leadershipCount: Number(res.headers.get("X-Selected-Leadership-Count") ?? "0"),
+        experienceCount: Number(data?.experienceCount ?? "0"),
+        projectCount: Number(data?.projectCount ?? "0"),
+        leadershipCount: Number(data?.leadershipCount ?? "0"),
+        reportId: String(data?.reportId ?? ""),
       })
       setStatus("done")
-      setMsg("PDF resume generated from your saved profile")
+      setMsg("Tailored resume and enhancement report generated")
+      router.push(`/reports/${data.reportId}`)
       router.refresh()
     } catch {
       setStatus("error")
@@ -117,7 +111,8 @@ export default function JobDescriptionCard({
         <div className="mt-5 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/75">
           Selected {generationSummary.experienceCount} experience entries,{" "}
           {generationSummary.projectCount} projects, and{" "}
-          {generationSummary.leadershipCount} leadership entries.
+          {generationSummary.leadershipCount} leadership entries. Report ID:{" "}
+          {generationSummary.reportId}
         </div>
       ) : null}
     </div>

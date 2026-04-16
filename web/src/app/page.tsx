@@ -7,19 +7,47 @@ export default async function Home() {
 
   if (session?.user) {
     let latestJobDescription = null
+    let recentReports: Array<{
+      id: string
+      createdAt: string
+      jobDescriptionPreview: string
+    }> = []
 
     if (session.user.email) {
       try {
-        latestJobDescription = await prisma.jobDescriptionEntry.findFirst({
-          where: { userEmail: session.user.email },
-          orderBy: { createdAt: "desc" },
-          select: {
-            content: true,
-            createdAt: true,
-          },
-        })
+        const [latestJobDescriptionEntry, reportEntries] = await Promise.all([
+          prisma.jobDescriptionEntry.findFirst({
+            where: { userEmail: session.user.email },
+            orderBy: { createdAt: "desc" },
+            select: {
+              content: true,
+              createdAt: true,
+            },
+          }),
+          prisma.tailoredResumeReport.findMany({
+            where: { userEmail: session.user.email },
+            orderBy: { createdAt: "desc" },
+            take: 8,
+            select: {
+              id: true,
+              createdAt: true,
+              jobDescriptionEntry: {
+                select: {
+                  content: true,
+                },
+              },
+            },
+          }),
+        ])
+
+        latestJobDescription = latestJobDescriptionEntry
+        recentReports = reportEntries.map((entry) => ({
+          id: entry.id,
+          createdAt: entry.createdAt.toISOString(),
+          jobDescriptionPreview: entry.jobDescriptionEntry.content,
+        }))
       } catch (error) {
-        console.error("Failed to load latest job description", error)
+        console.error("Failed to load dashboard data", error)
       }
     }
 
@@ -34,6 +62,7 @@ export default async function Home() {
               }
             : null
         }
+        recentReports={recentReports}
       />
     )
   }

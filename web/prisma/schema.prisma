@@ -13,9 +13,9 @@ model ResumeUpload {
   filename            String
   mimeType            String
   bytes               Bytes
+  createdAt           DateTime @default(now())
   extractedText       String?
   textExtractionError String?
-  createdAt           DateTime @default(now())
 
   @@index([userEmail, createdAt])
 }
@@ -38,11 +38,11 @@ model BaseResume {
   fileSize            Int
   bytes               Bytes
   extractedText       String?
-  parsedProfileDraft  Json?
   textExtractionError String?
   isPrimary           Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  parsedProfileDraft  Json?
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
@@ -50,48 +50,48 @@ model BaseResume {
 }
 
 model Profile {
-  id                 String                    @id @default(cuid())
-  userId             String                    @unique
-  fullName           String                    @default("")
-  email              String                    @default("")
-  phone              String                    @default("")
-  location           String                    @default("")
-  linkedinUrl        String                    @default("")
-  githubUrl          String                    @default("")
-  skillLanguages     String[]                  @default([])
-  skillFrameworks    String[]                  @default([])
-  skillTools         String[]                  @default([])
-  skillCloud         String[]                  @default([])
-  skillDatabases     String[]                  @default([])
-  skillOther         String[]                  @default([])
-  createdAt          DateTime                  @default(now())
-  updatedAt          DateTime                  @updatedAt
-  user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  educationEntries   ProfileEducation[]
-  experienceEntries  ProfileExperience[]
-  projectEntries     ProfileProject[]
+  id                     String                   @id @default(cuid())
+  userId                 String                   @unique
+  fullName               String                   @default("")
+  email                  String                   @default("")
+  phone                  String                   @default("")
+  location               String                   @default("")
+  linkedinUrl            String                   @default("")
+  githubUrl              String                   @default("")
+  skillLanguages         String[]                 @default([])
+  skillFrameworks        String[]                 @default([])
+  skillTools             String[]                 @default([])
+  skillCloud             String[]                 @default([])
+  skillDatabases         String[]                 @default([])
+  skillOther             String[]                 @default([])
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  educationEntries       ProfileEducation[]
+  experienceEntries      ProfileExperience[]
   extracurricularEntries ProfileExtracurricular[]
+  projectEntries         ProfileProject[]
 }
 
 model ProfileEducation {
-  id                 String   @id @default(cuid())
+  id                 String  @id @default(cuid())
   profileId          String
   sortOrder          Int
-  school             String   @default("")
-  college            String   @default("")
-  degree             String   @default("")
-  fieldOfStudy       String   @default("")
-  minor              String   @default("")
-  schoolYear         String   @default("")
-  startMonth         String   @default("")
-  startYear          String   @default("")
-  endMonth           String   @default("")
-  endYear            String   @default("")
-  currentlyAttending Boolean  @default(false)
-  gpa                String   @default("")
-  departmentGpa      String   @default("")
-  description        String   @default("")
-  profile            Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  school             String  @default("")
+  college            String  @default("")
+  degree             String  @default("")
+  fieldOfStudy       String  @default("")
+  minor              String  @default("")
+  schoolYear         String  @default("")
+  startMonth         String  @default("")
+  startYear          String  @default("")
+  endMonth           String  @default("")
+  endYear            String  @default("")
+  currentlyAttending Boolean @default(false)
+  gpa                String  @default("")
+  departmentGpa      String  @default("")
+  description        String  @default("")
+  profile            Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId, sortOrder])
 }
@@ -138,28 +138,46 @@ model ProfileProject {
 }
 
 model ProfileExtracurricular {
-  id          String   @id @default(cuid())
-  profileId   String
-  sortOrder   Int
-  organization String  @default("")
-  title       String   @default("")
-  location    String   @default("")
-  startMonth  String   @default("")
-  startYear   String   @default("")
-  endMonth    String   @default("")
-  endYear     String   @default("")
-  description String   @default("")
-  bullets     String[] @default([])
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  profileId    String
+  sortOrder    Int
+  organization String   @default("")
+  title        String   @default("")
+  location     String   @default("")
+  startMonth   String   @default("")
+  startYear    String   @default("")
+  endMonth     String   @default("")
+  endYear      String   @default("")
+  description  String   @default("")
+  bullets      String[] @default([])
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId, sortOrder])
 }
 
 model JobDescriptionEntry {
-  id        String   @id @default(cuid())
+  id        String                @id @default(cuid())
   userEmail String
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime              @default(now())
+  report    TailoredResumeReport?
 
   @@index([userEmail, createdAt])
+}
+
+model TailoredResumeReport {
+  id                    String              @id @default(cuid())
+  userEmail             String
+  jobDescriptionEntryId String              @unique
+  baseResumeId          String?
+  originalResumeJson    Json
+  tailoredResumeJson    Json
+  enhancementReportJson Json
+  pdf                   Bytes
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  jobDescriptionEntry   JobDescriptionEntry @relation(fields: [jobDescriptionEntryId], references: [id], onDelete: Cascade)
+
+  @@index([userEmail, createdAt])
+  @@index([baseResumeId])
 }

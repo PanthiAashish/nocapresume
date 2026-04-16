@@ -11,7 +11,13 @@ function createPrismaClient() {
 }
 
 function hasCurrentProfileModels(client: PrismaClient) {
-  return "user" in client && "baseResume" in client && "profile" in client
+  return (
+    "user" in client &&
+    "baseResume" in client &&
+    "profile" in client &&
+    "jobDescriptionEntry" in client &&
+    "tailoredResumeReport" in client
+  )
 }
 
 export const prisma =

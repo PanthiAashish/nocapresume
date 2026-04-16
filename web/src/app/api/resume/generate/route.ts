@@ -67,25 +67,35 @@ export async function POST(req: Request) {
     })
   }
   const pdf = rendered.pdf
-  const filenameBase =
-    tailored.finalResume.basics.fullName.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "") ||
-    "resume"
 
-  return new Response(new Uint8Array(pdf), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filenameBase}_resume.pdf"`,
-      "X-Job-Description-Id": savedJobDescription.id,
-      "X-Selected-Experience-Count": String(rendered.fit.resume.experience.entries.length),
-      "X-Selected-Project-Count": String(rendered.fit.resume.projects.entries.length),
-      "X-Tailoring-Keywords": tailored.audit.matchedJobKeywords.slice(0, 8).join(","),
-      "X-Tailoring-Notes": String(tailored.audit.notes.length),
-      "X-Resume-Compression-Steps": rendered.fit.appliedSteps.join(","),
-      "X-Resume-Font-Scale": String(rendered.fit.layoutState.fontScale),
-      "X-Resume-Spacing-Tightness": String(rendered.fit.layoutState.spacingTightness),
-      "X-Render-Path": "pdf-lib-fixed-template",
-      "Cache-Control": "no-store",
+  const savedReport = await prisma.tailoredResumeReport.create({
+    data: {
+      userEmail: session.user.email,
+      jobDescriptionEntryId: savedJobDescription.id,
+      baseResumeId: baseResume.id,
+      originalResumeJson: tailored.source,
+      tailoredResumeJson: tailored.finalResume,
+      enhancementReportJson: tailored.enhancementReport,
+      pdf: Buffer.from(pdf),
     },
+    select: { id: true },
   })
+
+  return new Response(
+    JSON.stringify({
+      reportId: savedReport.id,
+      jobDescriptionId: savedJobDescription.id,
+      experienceCount: rendered.fit.resume.experience.entries.length,
+      projectCount: rendered.fit.resume.projects.entries.length,
+      leadershipCount: 0,
+      matchedKeywords: tailored.enhancementReport.matchedJobKeywords.slice(0, 8),
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    }
+  )
 }

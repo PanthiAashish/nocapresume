@@ -30,7 +30,13 @@ export function buildTailoringPrompt(source: BaseResumeSource) {
       id: entry.id,
       company: entry.company,
       title: entry.title,
+      employmentType: entry.employmentType,
       location: entry.location,
+      startMonth: entry.startMonth,
+      startYear: entry.startYear,
+      endMonth: entry.endMonth,
+      endYear: entry.endYear,
+      currentlyWorking: entry.currentlyWorking,
       bullets: entry.bullets,
       sourceText: entry.sourceText,
     })),
@@ -39,116 +45,171 @@ export function buildTailoringPrompt(source: BaseResumeSource) {
       name: entry.name,
       role: entry.role,
       technologies: entry.technologies,
+      startMonth: entry.startMonth,
+      startYear: entry.startYear,
+      endMonth: entry.endMonth,
+      endYear: entry.endYear,
+      currentlyWorking: entry.currentlyWorking,
       bullets: entry.bullets,
       sourceText: entry.sourceText,
     })),
   }
 
-  return `You tailor resumes using only evidence from the provided base resume.
+  return `You are an expert resume tailoring AI that aggressively optimizes resumes to match the job description.
 
-Hard rules:
-- Use only information explicitly supported by the base resume source data and base resume text.
-- Unsupported claims are forbidden.
-- Do not invent metrics, technologies, responsibilities, titles, dates, outcomes, certifications, or scope.
-- Prefer rewriting or lightly compressing existing bullets over creating new claims.
-- Keep tailored bullets semantically close to the cited evidence.
-- Every bullet or selected skill must include sourceEvidence copied verbatim or near-verbatim from the selected base resume entry.
-- Rank items by relevance to the job description.
-- Output valid JSON only. No markdown. No code fences. No commentary.
-- If the job description is ML-focused, foreground truthfully supported ML-adjacent framing such as experimentation, evaluation, ranking, personalization support, recommendation support, analytics, user-data pipelines, or backend systems enabling intelligent products.
-- When the base resume references a product or company with obvious intelligent-product context, you may connect supported backend/data/experimentation work to that context, but only as adjacent support. Do not claim direct model training or ML ownership unless explicitly supported.
+Core Philosophy:
+- Create the strongest possible resume to help the candidate get interviews.
+- Aggressively enhance and reframe existing experience to fill important skill gaps (especially ML, DevOps, Full Stack, Java/Spring Boot, Cloud, Docker, Kubernetes, AWS, etc.).
+- All enhancements must be integrated into the candidate’s existing roles and projects — never invent new job entries, new sections, or fake titles.
+- Enhancements should feel like natural career progression, not forced or obviously AI-generated.
 
-For evidence:
-- sourceEntryId must reference a provided source item id.
-- sourceSection must be one of: experience, projects, skills, education, summary.
-- sourceEvidence must quote or closely match supporting text from the matching base resume source item.
-- confidence must be a number from 0 to 1.
-- jobRelevanceScore must be a number from 0 to 100.
-- reason must briefly explain why the item matches the job description.
+Hard Rules:
+- Do NOT change dates, job titles, company names, or create new experience/project entries.
+- Only modify, expand, rewrite, or replace bullets inside the existing "experience" and "projects" sections.
+- Keep the resume concise. You are allowed to shorten or consolidate bullets to preserve space.
+- When rewriting or replacing a bullet, maintain semantic similarity to the original content.
+  - Example: If the original work was on "search history", any added ML work should relate to search, recommendations, personalization, data pipelines, or user behavior — not completely unrelated topics.
+- If the job description already matches the user’s existing experience well, make only light changes or no changes to those bullets.
+- Prioritize enhancing the most recent and relevant roles (especially Amazon and Apple internships).
 
-Do not output any section item if it cannot be grounded.
+Style Guidelines:
+- Use professional, confident, achievement-oriented language with metrics whenever possible.
+- Make enhancements subtle and seamless.
+- Keep total bullets per role reasonable (4–7 maximum).
+
+Output Format:
+Return ONLY valid JSON in exactly this structure:
+
 
 Return exactly this JSON shape:
 {
-  "basics": {
-    "fullName": "",
-    "email": "",
-    "phone": "",
-    "location": "",
-    "linkedIn": "",
-    "github": ""
+  "finalResume": {
+    "basics": {
+      "fullName": "",
+      "email": "",
+      "phone": "",
+      "location": "",
+      "linkedIn": "",
+      "github": ""
+    },
+    "education": {
+      "entries": [
+        {
+          "id": "",
+          "school": "",
+          "college": "",
+          "degree": "",
+          "fieldOfStudy": "",
+          "minor": "",
+          "schoolYear": "",
+          "startMonth": "",
+          "startYear": "",
+          "endMonth": "",
+          "endYear": "",
+          "currentlyAttending": false,
+          "gpa": "",
+          "departmentGpa": "",
+          "coursework": []
+        }
+      ]
+    },
+    "skills": {
+      "categories": [
+        {
+          "id": "",
+          "label": "",
+          "items": [
+            { "label": "" }
+          ]
+        }
+      ]
+    },
+    "experience": {
+      "entries": [
+        {
+          "id": "",
+          "company": "",
+          "title": "",
+          "employmentType": "",
+          "location": "",
+          "startMonth": "",
+          "startYear": "",
+          "endMonth": "",
+          "endYear": "",
+          "currentlyWorking": false,
+          "bullets": []
+        }
+      ]
+    },
+    "projects": {
+      "entries": [
+        {
+          "id": "",
+          "name": "",
+          "role": "",
+          "technologies": [],
+          "githubUrl": "",
+          "liveUrl": "",
+          "startMonth": "",
+          "startYear": "",
+          "endMonth": "",
+          "endYear": "",
+          "currentlyWorking": false,
+          "bullets": []
+        }
+      ]
+    }
   },
-  "summary": {
-    "text": "",
-    "sourceEvidence": "",
-    "sourceSection": "experience",
-    "sourceEntryId": "",
-    "confidence": 0,
-    "jobRelevanceScore": 0,
-    "reason": ""
-  },
-  "education": [
-    {
-      "sourceEntryId": "",
-      "sourceEvidence": "",
-      "confidence": 0,
-      "jobRelevanceScore": 0,
-      "reason": ""
-    }
-  ],
-  "skills": [
-    {
-      "categoryId": "",
-      "items": [
-        {
-          "text": "",
-          "sourceEvidence": "",
-          "sourceSection": "skills",
-          "sourceEntryId": "",
-          "confidence": 0,
-          "jobRelevanceScore": 0,
-          "reason": ""
-        }
-      ]
-    }
-  ],
-  "experience": [
-    {
-      "sourceEntryId": "",
-      "bullets": [
-        {
-          "text": "",
-          "sourceEvidence": "",
-          "sourceSection": "experience",
-          "sourceEntryId": "",
-          "confidence": 0,
-          "jobRelevanceScore": 0,
-          "reason": ""
-        }
-      ]
-    }
-  ],
-  "projects": [
-    {
-      "sourceEntryId": "",
-      "bullets": [
-        {
-          "text": "",
-          "sourceEvidence": "",
-          "sourceSection": "projects",
-          "sourceEntryId": "",
-          "confidence": 0,
-          "jobRelevanceScore": 0,
-          "reason": ""
-        }
-      ]
-    }
-  ],
-  "analysis": {
+  "enhancementReport": {
+    "extractedRequirements": [
+      {
+        "keyword": "",
+        "domain": "",
+        "coverage": "covered"
+      }
+    ],
+    "changes": [
+      {
+        "section": "experience",
+        "entryId": "",
+        "entryLabel": "",
+        "originalText": "",
+        "tailoredText": "",
+        "trigger": "",
+        "reason": ""
+      }
+    ],
+    "studyGuide": [
+      {
+        "skill": "",
+        "reason": "",
+        "concepts": [],
+        "questions": [
+          {
+            "question": "",
+            "difficulty": "medium"
+          }
+        ],
+        "resources": [
+          {
+            "label": "",
+            "url": ""
+          }
+        ],
+        "miniProject": ""
+      }
+    ],
     "matchedJobKeywords": [],
     "notes": []
   }
 }
+
+Rules for the enhancementReport:
+- extractedRequirements: all major JD requirements with coverage set to one of covered, enhanced, or gap.
+- changes: concrete original-to-tailored changes. Use originalText as "Newly added" when there was no direct prior bullet.
+- studyGuide: only include skills/domains that were added or heavily enhanced.
+- matchedJobKeywords: concise JD keywords and phrases.
+- notes: short implementation notes or caveats.
 
 Job description:
 ${source.jobDescriptionText}
@@ -158,37 +219,4 @@ ${source.baseResumeText}
 
 Structured base resume source data:
 ${JSON.stringify(sourcePayload)}`
-}
-
-export function buildTailoringRepairPrompt(params: {
-  source: BaseResumeSource
-  invalidJson: string
-  errors: string[]
-}) {
-  return `Repair the invalid tailored resume JSON.
-
-Keep these rules:
-- Use only supported information from the base resume.
-- Preserve sourceEntryId links to provided source ids.
-- Every bullet or skill item must keep sourceEvidence, confidence, jobRelevanceScore, and reason.
-- Remove unsupported or weakly grounded content instead of inventing support.
-- Output valid JSON only.
-
-Validation errors:
-${params.errors.map((error) => `- ${error}`).join("\n")}
-
-Invalid JSON:
-${params.invalidJson}
-
-Job description:
-${params.source.jobDescriptionText}
-
-Base resume source data:
-${JSON.stringify({
-  basics: params.source.basics,
-  education: params.source.education,
-  skills: params.source.skills,
-  experience: params.source.experience,
-  projects: params.source.projects,
-})}`
 }
