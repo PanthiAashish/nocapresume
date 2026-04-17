@@ -30,3 +30,5 @@ build/
 *.log
 coverage/
 /generated/prisma
+
+.claude

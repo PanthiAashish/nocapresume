@@ -1,4 +1,6 @@
 import { auth } from "@/auth"
+import { isStructuredResume } from "@/lib/enhancementReport"
+import { renderResumeAsPdf } from "@/lib/pdfResumeRenderer"
 import { prisma } from "@/lib/prisma"
 
 type RouteProps = {
@@ -23,13 +25,16 @@ export async function GET(_: Request, { params }: RouteProps) {
       userEmail: session.user.email,
     },
     select: {
-      pdf: true,
       tailoredResumeJson: true,
     },
   })
 
   if (!report) {
     return new Response(JSON.stringify({ error: "not_found" }), { status: 404 })
+  }
+
+  if (!isStructuredResume(report.tailoredResumeJson)) {
+    return new Response(JSON.stringify({ error: "invalid_resume" }), { status: 422 })
   }
 
   const basics =
@@ -45,7 +50,9 @@ export async function GET(_: Request, { params }: RouteProps) {
   const filenameBase =
     basics?.fullName?.trim().replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "") || "resume"
 
-  return new Response(new Uint8Array(report.pdf), {
+  const rendered = await renderResumeAsPdf(report.tailoredResumeJson)
+
+  return new Response(new Uint8Array(rendered.pdf), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filenameBase}_tailored_resume.pdf"`,

@@ -1,20 +1,18 @@
-# NoCapResume — Evidence-Grounded Resume Tailoring
+# NoCapResume — Evidence-Grounded AI Resume Tailoring
 
-NoCapResume is a web app that helps users tailor their resume to a specific job description while enforcing a **truthfulness constraint**: generated suggestions must be grounded in evidence from the user's resume — no unsupported claims.
+NoCapResume is a full-stack web app that tailors your resume to a specific job description using AI — with a **truthfulness constraint**: every generated suggestion must be grounded in evidence from your actual resume. No hallucinated skills. No fake credentials.
+
+> **Live app:** `[PLACEHOLDER: add deployed URL]`
+> **GitHub:** https://github.com/PanthiAashish/nocapresume
 
 ---
 
-## Current Status
+## What It Does
 
-| Feature | Status |
-|---|---|
-| Google OAuth sign-in/sign-out (Auth.js / NextAuth)
-| Modern landing + dashboard UI
-| Resume PDF upload flow
-| Cloud persistence via Neon Postgres + Prisma
-| Success confirmation page after upload
-
-**Planned next:** job description intake, resume parsing, evidence-grounded bullet suggestions, truthfulness guard labels, and export.
+1. **Upload your resume PDF** — the system extracts text and uses GPT-4.1-mini to parse it into a structured profile (experience, education, skills, projects)
+2. **Paste a job description** — the AI rewrites your resume bullets to match the role, constrained to only enhance what you've actually done
+3. **Review the report** — every tailored bullet is labeled with source evidence, a confidence score, and job relevance score
+4. **Download a single-page PDF** — compressed and formatted, ready to submit
 
 ---
 
@@ -22,10 +20,24 @@ NoCapResume is a web app that helps users tailor their resume to a specific job 
 
 | Layer | Technology |
 |---|---|
-| Frontend / Server | Next.js (App Router) + TypeScript + Tailwind CSS |
-| Auth | Auth.js (NextAuth) with Google OAuth |
+| Frontend / Server | Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 |
+| Auth | Auth.js v5 (NextAuth) with Google OAuth |
 | Database | Neon (PostgreSQL) |
-| ORM | Prisma |
+| ORM | Prisma 6 |
+| AI | OpenAI API (GPT-4.1-mini) |
+| PDF Generation | pdf-lib |
+| PDF Extraction | pdf-parse |
+
+---
+
+## Features
+
+- Google OAuth sign-in
+- Resume PDF upload with automatic text extraction and LLM parsing
+- Structured profile management (experience, education, skills, projects)
+- Evidence-grounded resume tailoring — bullets annotated with `sourceEvidence`, `confidence`, and `jobRelevanceScore`
+- Enhancement report with matched keywords, before/after change log, and skill gap study guide
+- Single-page PDF export with automatic compression (spacing, font, bullet reduction cascade)
 
 ---
 
@@ -33,120 +45,115 @@ NoCapResume is a web app that helps users tailor their resume to a specific job 
 
 ```
 nocapresume/
-└── web/                  # Next.js app (UI + API routes)
+└── web/                        # Next.js application
     ├── src/
-    │   ├── app/          # App Router pages + API routes
-    │   └── lib/          # Prisma client helper, utilities
-    ├── prisma/           # Prisma schema + migrations
-    ├── .env              # DATABASE_URL for Prisma (DO NOT COMMIT)
-    └── .env.local        # Next.js envs (Auth + DB) (DO NOT COMMIT)
+    │   ├── app/                # App Router pages + API routes
+    │   │   ├── api/
+    │   │   │   ├── auth/       # NextAuth handlers
+    │   │   │   ├── profile/    # Resume upload + profile management
+    │   │   │   ├── job-description/
+    │   │   │   ├── resume/     # Tailoring + generation endpoints
+    │   │   │   └── reports/    # PDF download
+    │   │   ├── profile/        # Profile editing page
+    │   │   └── reports/[reportId]/  # Tailored resume report page
+    │   └── lib/                # Core logic (tailoring, rendering, parsing, schema)
+    ├── prisma/                 # Schema + migrations
+    └── scripts/
 ```
 
 ---
 
-## Setup Instructions
+## Local Setup
 
-### 1. Prerequisites
+### Prerequisites
 
-- Node.js installed
-- A Neon Postgres database (or any Postgres DB)
-- Google OAuth Client (Google Cloud Console)
+- Node.js 20+
+- A [Neon](https://neon.tech) PostgreSQL database (or any Postgres DB)
+- [OpenAI API key](https://platform.openai.com)
+- Google OAuth credentials ([Google Cloud Console](https://console.cloud.google.com))
 
-### 2. Install dependencies
+### 1. Clone and install
 
 ```bash
-cd web
+git clone https://github.com/PanthiAashish/nocapresume.git
+cd nocapresume/web
 npm install
 ```
 
-### 3. Environment variables
+### 2. Environment variables
 
-Create `web/.env` (used by Prisma):
+Create `web/.env.local`:
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/DB?sslmode=require"
-```
-
-Create `web/.env.local` (used by Next.js at runtime):
-
-```env
-AUTH_SECRET="your_auth_secret"
+OPENAI_API_KEY="sk-..."
+AUTH_SECRET="run: openssl rand -base64 32"
 AUTH_URL="http://localhost:3000"
 AUTH_GOOGLE_ID="your_google_client_id"
 AUTH_GOOGLE_SECRET="your_google_client_secret"
-DATABASE_URL="postgresql://USER:PASSWORD@HOST/DB?sslmode=require"
 ```
 
-> **Important:** Keep both files out of git — they contain secrets.
+> Never commit `.env` or `.env.local` — both are in `.gitignore`.
 
-### 4. Google OAuth configuration
+### 3. Google OAuth — add redirect URI
 
-In Google Cloud Console, add the following redirect URI:
+In Google Cloud Console → your OAuth app → Authorized redirect URIs, add:
 
 ```
 http://localhost:3000/api/auth/callback/google
 ```
 
-### 5. Database migration
+### 4. Run database migrations
 
 ```bash
-cd web
-npx prisma migrate dev
+npx prisma migrate deploy
 npx prisma generate
 ```
 
-### 6. Run the app
+### 5. Start the dev server
 
 ```bash
-cd web
 npm run dev
 ```
 
-Then open:
-
-- `http://localhost:3000` — landing page + Google sign-in
-- `http://localhost:3000/dashboard` — upload UI (requires login)
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Demo Flow
+## Deployment (Vercel)
+
+1. Import the repo to [Vercel](https://vercel.com) and set the **Root Directory** to `web`
+2. Add all environment variables from `.env.local` in the Vercel dashboard (set `AUTH_URL` to your production domain)
+3. Add your production domain to Google OAuth's authorized redirect URIs:
+   ```
+   https://your-domain.vercel.app/api/auth/callback/google
+   ```
+4. After deploy, run migrations against the production database:
+   ```bash
+   DATABASE_URL="<production url>" npx prisma migrate deploy
+   ```
+
+---
+
+## Usage
 
 1. Sign in with Google
-2. Go to the Dashboard
-3. Upload a resume PDF
-4. File is stored as bytes in the `ResumeUpload` table in Neon Postgres
-5. You are redirected to a success confirmation page
-
-### Verify upload (optional)
-
-Run this query in the Neon SQL Editor:
-
-```sql
-SELECT id, "userEmail", filename, "createdAt", octet_length(bytes) AS bytes_len
-FROM "ResumeUpload"
-ORDER BY "createdAt" DESC
-LIMIT 10;
-```
+2. Upload your resume PDF — review the auto-parsed profile and correct anything if needed
+3. Paste a job description on the dashboard and click Generate
+4. Review the tailored resume report — matched keywords, evidence labels, study guide for skill gaps
+5. Download your single-page tailored PDF
 
 ---
 
-## Design Decisions (MVP)
+## Design Decisions
 
-- Resume PDFs are stored as raw bytes in Postgres for simplicity. A future improvement would be to move files to object storage (e.g. S3) and keep only metadata in Postgres.
-- Authentication is Google OAuth only — no custom passwords.
-
----
-
-## Roadmap
-
-1. Job description input page + requirement extraction
-2. PDF → text parsing + section structuring
-3. Evidence-grounded bullet generation (structured JSON)
-4. Truthfulness guard labels (Supported / Partial / Unsupported) + export filtering
-5. PDF export of verified outputs
+- **Two-stage LLM pipeline:** Parsing (extraction-only) and tailoring (constrained enhancement) use separate GPT-4.1-mini calls with `temperature=0` to keep outputs deterministic and auditable.
+- **Evidence grounding:** The tailoring model is prohibited from inventing new job entries, titles, or dates. Every bullet must relate semantically to existing resume content.
+- **Single-page compression:** The PDF renderer applies a cascade (drop sections → reduce bullets → shorten bullets → tighten spacing → reduce font) to guarantee one-page output.
+- **Neon PostgreSQL:** Serverless Postgres with zero cold-start penalty on connection.
 
 ---
 
 ## License
 
-For course / academic project use.
+Academic project — CSCI 411/412 Senior Seminar.
